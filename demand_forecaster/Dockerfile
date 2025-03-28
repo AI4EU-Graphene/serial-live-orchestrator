@@ -10,6 +10,7 @@ COPY . .
 # Install Flask
 RUN pip install --no-cache-dir flask
 RUN pip install --no-cache-dir pandas
+RUN pip install --no-cache-dir statsmodels
 
 # Expose the port used by the app
 EXPOSE 5002
