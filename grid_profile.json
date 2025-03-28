@@ -1,0 +1,18 @@
+{
+    "country": "Ireland",
+    "grid_id": "IE_GRID_001",
+    "has_battery_storage": false,
+    "tariff_type": "fixed",
+    "enabled_nodes": [
+      "demand_forecaster",
+      "renewable_predictor",
+      "load_optimizer"
+    ],
+    "optional_nodes": [
+      "dynamic_tariff_recommender",
+      "battery_dispatch_optimizer"
+    ],
+    "data_source": "SEAI_public",
+    "notes": "Optimized for fixed-rate tariff model and standard load forecasting"
+  }
+  

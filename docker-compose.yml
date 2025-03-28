@@ -14,3 +14,27 @@ services:
     container_name: cube-node-container
     ports:
       - "5001:5001"
+  demand-forecaster:
+    build:
+      context: ./demand_forecaster
+    container_name: demand-forecaster-container
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
+
+  load-optimizer:
+    build:
+      context: ./load_optimizer
+    container_name: load-optimizer-container
+    ports:
+      - "5003:5003"
+  data-ingestor:
+    build:
+      context: ./data_ingestor
+    container_name: data-ingestor-container
+    ports:
+      - "5004:5004"
+    volumes:
+      - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
+

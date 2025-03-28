@@ -1,81 +1,55 @@
-#!/usr/bin/env python3
-# ===================================================================================
-# Copyright (C) 2021 Fraunhofer Gesellschaft. All rights reserved.
-# ===================================================================================
-# This Acumos software file is distributed by Fraunhofer Gesellschaft
-# under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# This file is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ===============LICENSE_END========================================================
-
-import grpc
 import json
-# import the generated classes
-import orchestrator_pb2
-import orchestrator_pb2_grpc
-import shutil
-import os
-import argparse
+import requests
 
-class OrchestratorClient:
+def run_pipeline(input_number):
+    # Load the blueprint (for legacy support, still square → cube)
+    with open("orchestrator_client/blueprint.json") as f:
+        blueprint = json.load(f)
 
+    # Load grid profile to check enabled nodes
+    with open("grid_profile.json") as f:
+        grid_profile = json.load(f)
 
-    def request_orchestrator_server_response(self, port_address, blueprint, dockerinfo, protozip):
-        """open a gRPC channel"""
-        channel = grpc.insecure_channel(port_address)
+    enabled_nodes = grid_profile.get("enabled_nodes", [])
 
-        """create a stub (client)"""
-        stub = orchestrator_pb2_grpc.start_orchestratorStub(channel)
+    # Optional: Demand Forecasting Node
+    if "demand_forecaster" in enabled_nodes:
+        print("\n📈 Demand Forecasting Node Triggered")
+        try:
+            forecast_response = requests.post("http://localhost:5002/forecast", json={"days": 5})
+            forecast_data = forecast_response.json()
+            for day in forecast_data["forecast"]:
+                print(f"  {day['date']}: {day['predicted_demand_MW']} MW")
+        except Exception as e:
+            print(f"  ❌ Forecasting failed: {e}")
 
-        """Read the blueprint.json as dict and convert into string"""
-        with open(blueprint) as f:
-            blueprint_dict = json.load(f)
-        blueprint_str = json.dumps(blueprint_dict)
+    # Optional: Load Optimization Node
+    if "load_optimizer" in enabled_nodes:
+        print("\n⚙️ Load Optimizer Node Triggered")
+        try:
+            optimize_response = requests.post("http://localhost:5003/optimize",
+                                              json={"forecast": forecast_data["forecast"]})
+            optimization_data = optimize_response.json()
 
-        """Read the dockerinfo.json as dict and convert to string"""
-        with open(dockerinfo) as f:
-            dockerinfo_dict = json.load(f)
-        dockerinfo_str = json.dumps(dockerinfo_dict)
+            for entry in optimization_data["optimization"]:
+                print(f"  {entry['date']}: {entry['optimized_demand_MW']} MW (from {entry['original_demand_MW']} MW)")
 
-        """Read the zip file containing all the protobufs for a particular pipeline"""
-        with open(protozip, 'rb') as f:
-            byte_stream = f.read()
+            print(f"  ⚡ Efficiency Gain: {optimization_data['efficiency_gain_percent']}%")
 
-        """create a request to pass it to orchestrator server"""
-        request = orchestrator_pb2.PipelineConfig(blueprint=blueprint_str, dockerinfo=dockerinfo_str,
-                                                  protoszip=byte_stream)
-        """make the call"""
-        response = stub.executePipeline(request)
+        except Exception as e:
+            print(f"  ❌ Optimization failed: {e}")
 
-        print("status code for the orchestrator: ", response.statusCode)
-        print("status message of the orchestrator: ", response.statusText)
+    # Square Node
+    print("\n🟧 Square Node Triggered")
+    square_response = requests.post("http://localhost:5000/square", json={"number": input_number})
+    square_output = square_response.json()["output"]
+    print(f"  ✔️ Square Output: {square_output}")
 
-    def go_one_folder_up(self):
-        os.path.abspath(os.curdir)
-        os.chdir("..")
-        return os.path.abspath(os.curdir)
-
-    def create_protoszip(self):
-        path = self.go_one_folder_up()
-        proto_folder = path + "/microservice"
-        shutil.make_archive("pipelineprotos", 'zip', proto_folder)
-
+    # Cube Node
+    print("\n🟦 Cube Node Triggered")
+    cube_response = requests.post("http://localhost:5001/cube", json={"number": square_output})
+    cube_output = cube_response.json()["output"]
+    print(f"  ✔️ Cube Output: {cube_output}")
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Enter port address")
-    parser.add_argument('port_address', type=str, help='Enter the address in the format ipaddress:port' )
-    args = parser.parse_args()
-    #port = '10.103.246.169:30030'
-    port = args.port_address
-    client = OrchestratorClient()
-    client.create_protoszip()
-    blueprint = "blueprint.json"
-    docker_info ="dockerinfo.json"
-    proto_zip = "pipelineprotos.zip"
-    client.request_orchestrator_server_response(port, blueprint, docker_info, proto_zip)
+    input_number = int(input("Enter a number to run through the pipeline: "))
+    run_pipeline(input_number)
