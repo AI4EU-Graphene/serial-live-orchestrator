@@ -37,4 +37,12 @@ services:
       - "5004:5004"
     volumes:
       - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
-
+  data-preprocessor:
+    build:
+      context: ./data_preprocessor
+    container_name: data-preprocessor-container
+    ports:
+      - "5005:5005"
+    volumes:
+      - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
+      - ./data_preprocessor:/app
