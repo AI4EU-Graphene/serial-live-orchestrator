@@ -44,3 +44,19 @@ services:
       - "5005:5005"
     volumes:
       - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
+  anomaly-detector:
+    build:
+      context: ./anomaly_detector
+    container_name: anomaly-detector-container
+    ports:
+      - "5006:5006"
+    volumes:
+      - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
+  alert-node:
+    build:
+      context: ./data_alert_node
+    container_name: alert-node-container
+    ports:
+      - "5007:5007"
+    volumes:
+      - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
