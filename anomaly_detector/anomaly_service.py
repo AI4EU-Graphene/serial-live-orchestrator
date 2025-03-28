@@ -35,7 +35,10 @@ def detect_anomalies():
         df = df.merge(clean_df[["Timestamp", "anomaly_label"]], on="Timestamp", how="left")
 
         anomalies = df[df["anomaly_label"] == "anomaly"]
-
+        # Save the updated DataFrame with anomaly labels
+        
+        df.to_csv(file_path, index=False)
+        
         return jsonify({
             "status": "Anomaly detection complete.",
             "total_rows": len(df),
