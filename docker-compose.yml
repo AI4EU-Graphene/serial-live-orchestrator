@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  square-node:
+    build:
+      context: ./square_node
+    container_name: square-node-container
+    ports:
+      - "5000:5000"
+
+  cube-node:
+    build:
+      context: ./cube_node
+    container_name: cube-node-container
+    ports:
+      - "5001:5001"
