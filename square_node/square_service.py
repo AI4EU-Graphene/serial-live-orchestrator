@@ -1,0 +1,21 @@
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/square', methods=['POST'])
+def square_number():
+    try:
+        data = request.get_json()
+        number = data.get('number', None)
+
+        if number is None:
+            return jsonify({'error': 'Missing number in request'}), 400
+
+        result = number ** 2
+        return jsonify({'input': number, 'output': result})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
