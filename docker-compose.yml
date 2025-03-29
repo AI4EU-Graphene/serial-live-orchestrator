@@ -60,3 +60,19 @@ services:
       - "5007:5007"
     volumes:
       - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
+  data-rebalancer:
+    build:
+      context: ./grid_rebalancer_node
+    container_name: data-rebalancer-container
+    ports:
+      - "5008:5008"
+    volumes:
+      - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
+  storage-optimizer:
+    build:
+      context: ./storage_optimizer_node
+    container_name: storage-optimizer-container
+    ports:
+      - "5009:5009"
+    volumes:
+      - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
