@@ -98,3 +98,9 @@ services:
     container_name: context-service-container
     ports:
       - "5012:5012"
+  smart-agent:
+    build:
+      context: ./smart_agent_node
+    container_name: smart-agent-container
+    ports:
+      - "5013:5013"

@@ -41,7 +41,7 @@ async def get_historic_data(client, region="ALL", semaphore: asyncio.Semaphore =
     categories = ["demandactual", "generationactual", "windactual", "interconnection", "co2intensity", "co2emission", "SnspALL"]
     final_year = datetime.now().year-1999
     for category in tqdm(categories, desc=f"Fetching categories for {region}"):
-        year_range = (20, 25)  # Only for 2024
+        year_range = (24, 25)  # Only for 2024
         for year in range(*year_range):
             frames = []
             # Use tqdm to track progress for each month
