@@ -11,6 +11,8 @@ def get_demand():
         return jsonify({"status": "Data download completed successfully."})
     except Exception as e:
         return jsonify({"error": str(e)})
-
+@app.route('/', methods=['GET'])
+def root():
+    return "Data ingestor is running.", 200
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5004)

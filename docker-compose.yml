@@ -6,7 +6,7 @@ services:
       context: ./square_node
     container_name: square-node-container
     ports:
-      - "5000:5000"
+      - "5050:5000"
 
   cube-node:
     build:

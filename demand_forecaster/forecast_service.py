@@ -38,6 +38,8 @@ def forecast_demand():
         return jsonify({"error": "Combined data file not found."})
     except Exception as e:
         return jsonify({"error": str(e)})
-
+@app.route('/', methods=['GET'])
+def root():
+    return "Demand forecaster is running.", 200
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5002)
