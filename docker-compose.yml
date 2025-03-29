@@ -76,3 +76,19 @@ services:
       - "5009:5009"
     volumes:
       - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
+  ml-preprocessor:
+    build:
+      context: ./ml_preprocessor_node
+    container_name: ml-preprocessor-container
+    ports:
+      - "5010:5010"
+    volumes:
+      - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
+  ml-forecaster:
+    build:
+      context: ./ml_forecaster_node
+    container_name: ml-forecaster-container
+    ports:
+      - "5011:5011"
+    volumes:
+      - ./data_ingestor/EirGrid_Data_Download/Downloaded_Data:/app/Downloaded_Data
