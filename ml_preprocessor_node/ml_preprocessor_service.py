@@ -51,6 +51,25 @@ def preprocess_for_ml():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+@app.route("/meta", methods=["GET"])
+def meta():
+    return jsonify({
+        "name": "ML Preprocessor",
+        "description": "Cleans and prepares data for machine learning.",
+        "host": "ml-preprocessor",
+        "port": 5010,
+        "input": [
+            "SYSTEM_DEMAND",
+            "GEN_EXP",
+            "CO2_INTENSITY",
+            "WIND_ACTUAL",
+            "Timestamp",
+            "Region"
+        ],
+        "output": [
+            "Cleaned_Data"
+        ],
+        "tags": ["preprocess", "ml", "energy"]
+    })
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5010)

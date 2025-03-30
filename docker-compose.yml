@@ -104,3 +104,9 @@ services:
     container_name: smart-agent-container
     ports:
       - "5013:5013"
+  registry-node:
+    build:
+      context: ./registry_node
+    container_name: registry-node-container
+    ports:
+      - "5014:5014"

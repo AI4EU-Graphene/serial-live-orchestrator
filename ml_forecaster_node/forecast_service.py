@@ -60,6 +60,14 @@ def train_and_forecast():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+@app.route("/meta", methods=["GET"])
+def meta():
+    return jsonify({
+        "name": "Demand Forecaster",
+        "description": "Uses ARIMA or Random Forest to forecast energy demand based on historical patterns.",
+        "input": ["Combined_Preprocessed_For_ML.csv"],
+        "output": ["Forecasted_Demand"],
+        "tags": ["forecast", "ml", "energy"]
+    })
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5011)

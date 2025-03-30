@@ -3,37 +3,42 @@ import pandas as pd
 import os
 
 app = Flask(__name__)
+DATA_PATH = "/app/Downloaded_Data/Combined_Preprocessed_For_ML.csv"
 
 @app.route("/", methods=["GET"])
 def root():
-    return "Storage Optimizer node is running."
+    return "Storage Optimizer is running.", 200
+
+@app.route("/meta", methods=["GET"])
+def meta():
+    return jsonify({
+        "name": "Storage Optimizer",
+        "description": "Decides whether to charge, discharge, or idle storage based on real-time supply-demand.",
+        "input": ["Combined_Preprocessed_For_ML.csv"],
+        "output": ["action"],
+        "tags": ["energy", "storage", "optimizer"]
+    })
 
 @app.route("/optimize-storage", methods=["GET"])
 def optimize_storage():
     try:
-        file_path = "/app/Downloaded_Data/Combined_ALL_ROI_NI_pivoted_24.csv"
-        if not os.path.exists(file_path):
-            return jsonify({"error": "Combined data file not found."}), 404
+        if not os.path.exists(DATA_PATH):
+            return jsonify({"error": "Preprocessed data file not found."}), 404
 
-        df = pd.read_csv(file_path)
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"])
-        latest = df.sort_values("Timestamp").iloc[-1]
+        df = pd.read_csv(DATA_PATH)
+        latest_row = df.iloc[-1]
 
-        demand = latest.get("SYSTEM_DEMAND", 0)
-        generation = latest.get("GEN_EXP", 0)
+        demand = latest_row["SYSTEM_DEMAND"]
+        generation = latest_row["GEN_EXP"]
 
-        action = "idle"
-        if generation - demand > 500:
-            action = "charge"
-        elif demand - generation > 500:
-            action = "discharge"
+        action = "charge" if generation > demand else "discharge" if generation < demand else "idle"
 
         return jsonify({
             "status": "Storage optimization decision complete.",
-            "latest_timestamp": latest["Timestamp"].strftime("%Y-%m-%d %H:%M:%S"),
-            "demand": round(demand, 2),
-            "generation": round(generation, 2),
-            "action": action
+            "latest_timestamp": latest_row["Timestamp"],
+            "action": action,
+            "demand": demand,
+            "generation": generation
         })
 
     except Exception as e:

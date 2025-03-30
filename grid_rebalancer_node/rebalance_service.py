@@ -1,47 +1,53 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 import pandas as pd
 import os
 
 app = Flask(__name__)
+DATA_PATH = "/app/Downloaded_Data/Combined_Preprocessed_For_ML.csv"
 
 @app.route("/", methods=["GET"])
 def root():
-    return "Grid Rebalancer node is running."
+    return "Grid Rebalancer is running.", 200
+
+@app.route("/meta", methods=["GET"])
+def meta():
+    return jsonify({
+        "name": "Grid Rebalancer",
+        "description": "Analyzes regional demand to check if grid rebalancing is needed.",
+        "input": ["Combined_Preprocessed_For_ML.csv"],
+        "output": ["rebalancing_required"],
+        "tags": ["energy", "grid", "rebalancer"]
+    })
 
 @app.route("/rebalance", methods=["GET"])
 def rebalance():
     try:
-        file_path = "/app/Downloaded_Data/Combined_ALL_ROI_NI_pivoted_24.csv"
-        if not os.path.exists(file_path):
-            return jsonify({"error": "Combined data file not found."}), 404
+        if not os.path.exists(DATA_PATH):
+            return jsonify({"error": "Preprocessed data file not found."}), 404
 
-        df = pd.read_csv(file_path)
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"])
-        df = df.sort_values("Timestamp")
+        df = pd.read_csv(DATA_PATH)
+        summary = df.groupby("Region")["SYSTEM_DEMAND"].agg(["mean", "max", "std"]).to_dict()
 
-        result = {}
-
-        for region in ["ALL", "ROI", "NI"]:
-            regional_data = df[df["Region"] == region]
-            mean_demand = regional_data["SYSTEM_DEMAND"].mean()
-            peak_demand = regional_data["SYSTEM_DEMAND"].max()
-            deviation = abs(peak_demand - mean_demand)
-
-            result[region] = {
-                "mean_demand": round(mean_demand, 2),
-                "peak_demand": round(peak_demand, 2),
+        rebalancing_required = {}
+        for region, metrics in summary["mean"].items():
+            deviation = summary["std"][region]
+            mean_demand = metrics
+            peak_demand = summary["max"][region]
+            rebalancing_required[region] = {
+                "rebalancing_required": deviation > (0.5 * mean_demand),
                 "demand_deviation": round(deviation, 2),
-                "rebalancing_required": bool(deviation > 1000)  # <-- Convert to native bool
+                "mean_demand": round(mean_demand, 2),
+                "peak_demand": round(peak_demand, 2)
             }
 
         return jsonify({
             "status": "Rebalancing operation completed.",
-            "rebalancing_summary": result,
+            "rebalancing_summary": rebalancing_required,
             "success": True
         })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5008)
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5008)

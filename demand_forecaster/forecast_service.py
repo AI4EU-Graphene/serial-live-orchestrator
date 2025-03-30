@@ -1,45 +1,53 @@
 from flask import Flask, jsonify
 import pandas as pd
-from statsmodels.tsa.arima.model import ARIMA
+from sklearn.ensemble import RandomForestRegressor
+import joblib
 import os
 
 app = Flask(__name__)
+DATA_PATH = "/app/Downloaded_Data/Combined_Preprocessed_For_ML.csv"
+MODEL_PATH = "/app/Downloaded_Data/random_forest_model.pkl"
 
-@app.route('/forecast', methods=['GET'])
-def forecast_demand():
-    file_path = '/app/Downloaded_Data/Combined_ALL_ROI_NI_pivoted_24.csv'
-    try:
-        # Load data
-        df = pd.read_csv(file_path, parse_dates=['Timestamp'])
-
-        # Ensure the Timestamp column is the DataFrame index
-        df.set_index('Timestamp', inplace=True)
-
-        # Aggregate demand (example: summing across regions)
-        if 'SYSTEM_DEMAND' in df.columns:
-            df_demand = df['SYSTEM_DEMAND'].resample('15min').sum().ffill()
-        else:
-            return jsonify({"error": "SYSTEM_DEMAND column missing."})
-
-        # ARIMA model (simple example)
-        model = ARIMA(df_demand, order=(1, 1, 1))
-        model_fit = model.fit()
-
-        # Forecasting the next 24 hours (96 intervals for 15 min each)
-        forecast = model_fit.forecast(steps=96)
-
-        # Prepare forecast data
-        forecast_data = [{"Timestamp": ts.strftime('%Y-%m-%d %H:%M:%S'), "Forecasted_Demand": val}
-                         for ts, val in zip(pd.date_range(start=df_demand.index[-1], periods=96, freq='15min'), forecast)]
-
-        return jsonify({"status": "Forecast generated successfully.", "forecast": forecast_data})
-
-    except FileNotFoundError:
-        return jsonify({"error": "Combined data file not found."})
-    except Exception as e:
-        return jsonify({"error": str(e)})
-@app.route('/', methods=['GET'])
+@app.route("/", methods=["GET"])
 def root():
-    return "Demand forecaster is running.", 200
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5002)
+    return "Demand Forecaster is running.", 200
+
+@app.route("/meta", methods=["GET"])
+def meta():
+    return jsonify({
+        "name": "Demand Forecaster",
+        "description": "Uses ARIMA or Random Forest to forecast energy demand based on historical patterns.",
+        "input": ["Combined_Preprocessed_For_ML.csv"],
+        "output": ["Forecasted_Demand"],
+        "tags": ["forecast", "ml", "energy"]
+    })
+
+@app.route("/train-forecast", methods=["GET"])
+def train_forecast():
+    try:
+        if not os.path.exists(DATA_PATH):
+            return jsonify({"error": "Preprocessed data file not found."}), 404
+
+        df = pd.read_csv(DATA_PATH)
+        df.dropna(subset=["SYSTEM_DEMAND"], inplace=True)
+
+        X = df.index.values.reshape(-1, 1)
+        y = df["SYSTEM_DEMAND"].values
+
+        model = RandomForestRegressor(n_estimators=100, random_state=42)
+        model.fit(X, y)
+
+        joblib.dump(model, MODEL_PATH)
+
+        return jsonify({
+            "status": "Forecast model trained successfully.",
+            "model_path": MODEL_PATH,
+            "rows_used": len(df),
+            "mse_on_test": 0.0  # Placeholder
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5011)

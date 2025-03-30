@@ -34,5 +34,14 @@ def check_alert():
 @app.route('/', methods=['GET'])
 def root():
     return "Alert node is running.", 200
+@app.route("/meta", methods=["GET"])
+def meta():
+    return jsonify({
+        "name": "Alert Node",
+        "description": "Triggers an alert if the number of anomalies crosses a set threshold.",
+        "input": ["anomaly_label"],
+        "output": ["ALERT", "NORMAL"],
+        "tags": ["alert", "anomaly", "monitoring"]
+    })
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5007)

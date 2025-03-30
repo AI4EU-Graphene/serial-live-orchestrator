@@ -32,6 +32,19 @@ def get_demand():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+@app.route("/meta", methods=["GET"])
+def meta():
+    return jsonify({
+        "name": "Data Source",
+        "description": "Provides raw energy grid metrics for downstream processing.",
+        "input": [],
+        "output": [
+            "SYSTEM_DEMAND", "GEN_EXP", "CO2_INTENSITY",
+            "WIND_ACTUAL", "Timestamp", "Region"
+        ],
+        "tags": ["source", "raw", "energy"],
+        "host": "data-ingestor",
+        "port": 5004
+    })
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5004)
