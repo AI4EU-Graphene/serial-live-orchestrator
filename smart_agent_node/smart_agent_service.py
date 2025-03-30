@@ -1,7 +1,9 @@
 from flask import Flask, jsonify
 import requests
+from flask_cors import CORS  
 
 app = Flask(__name__)
+CORS(app)
 REGISTRY_URL = "http://registry-node:5014/node-meta"
 
 NODE_ACTION_ENDPOINTS = {

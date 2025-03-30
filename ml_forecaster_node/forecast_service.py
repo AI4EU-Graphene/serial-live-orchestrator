@@ -48,13 +48,14 @@ def train_and_forecast():
 
         y_pred = model.predict(X_test)
         mse = mean_squared_error(y_test, y_pred)
-
+        print(f"Sample preds: {y_pred[:5]}")
+        print(f"Sample actual: {y_test[:5]}")
         joblib.dump(model, "/app/Downloaded_Data/random_forest_model.pkl")
-
+        print("🔥 Forecast service executing updated code 🔥")
         return jsonify({
             "status": "Forecast model trained successfully.",
             "rows_used": len(df),
-            "mse_on_test": round(mse, 2),
+            "mse_on_test": mse
             "model_path": "/app/Downloaded_Data/random_forest_model.pkl"
         })
 

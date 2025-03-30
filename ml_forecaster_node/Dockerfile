@@ -9,4 +9,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5011
 
+ENV PYTHONUNBUFFERED=1
+
 CMD ["python", "forecast_service.py"]
